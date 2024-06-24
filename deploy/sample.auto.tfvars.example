@@ -1,0 +1,6 @@
+name     = "sample-aio"
+location = "westus3"
+
+should_create_virtual_machine = "<true/false>"
+is_linux_server               = "<true/false>"
+should_use_event_hub          = "<true/false>"

@@ -1,57 +1,80 @@
-# Project Name
+# Azure Edge Extensions AIO IaC Terraform
 
-(short, 1-3 sentenced, description of the project)
+Infrastructure as Code (IaC) Terraform to create sample infrastructure for an Azure IoT Operations (AIO) instance.
 
 ## Features
 
-This project framework provides the following features:
+This project utilizes Terraform to do the following:
 
-* Feature 1
-* Feature 2
-* ...
+* (Optional) Provision an appropriately sized VM in Azure for Kubernetes and AIO.
+* (Optional) Provision necessary service principals for onboarding Arc and Azure Key Vault Secrets Provider access in the cluster.
+* (Optional) Outputs a script to be used on the machine that will have AIO.
 
 ## Getting Started
 
 ### Prerequisites
 
-(ideally very short, if any)
-
-- OS
-- Library version
-- ...
-
-### Installation
-
-(ideally very short)
-
-- npm install [package name]
-- mvn install
-- ...
+- (Optionally for Windows) [WSL](https://learn.microsoft.com/windows/wsl/install) installed and setup.
+- [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) available on the command line where this will be deployed.
+- [Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli) available on the command line where this will be deployed.
+- (Optional) Owner access to a Subscription to deploy the infrastructure.
 
 ### Quickstart
-(Add steps to get up and running quickly)
 
-1. git clone [repository clone url]
-2. cd [repository name]
-3. ...
+1. Login to the AZ CLI:
+    ```shell
+    az login --tenant <tenant>.onmicrosoft.com
+    ```
+    - Make sure your subscription is the one that you would like to use: `az account show`.
+    - Change to the subscription that you would like to use if needed:
+      ```shell
+      az account set -s <subscription-id>
+      ```
+1. Add a `<unique-name>.auto.tfvars` file to the root of the [deploy](deploy) directory that contains the following (refer to [deploy/sample.auto.tfvars.example](deploy/sample.auto.tfvars.example) for an example):
+    ```hcl
+    // <project-root>/deploy/<unique-name>.auto.tfvars
 
+    name     = "sample-aio"
+    location = "westus3"
 
-## Demo
+    should_create_virtual_machine = "<true/false>"
+    is_linux_server               = "<true/false>"
+    should_use_event_hub          = "<true/false>"
+    ```
+1. From the [deploy](deploy) directory execute the following (the `<unique-name>.auto.tfvars` created earlier will automatically be applied):
+   ```shell
+   terraform init
+   terraform apply
+   ```
 
-A demo app is included to show how to use the project.
+## Using Terraform Modules
 
-To run the demo, follow these steps:
+It is possible to use the Terraform modules directly from this repository using the [module](https://developer.hashicorp.com/terraform/language/modules/syntax) primitive supported by HCL syntax.
 
-(Add steps to start up the demo)
+An example of deploying just `infra` using Terraform from another repo would look like the following:
 
-1.
-2.
-3.
+```hcl
+module "aio_full" {
+  source = "github.com/azure-samples/azure-edge-extensions-aio-iac-terraform//deploy/modules/infra"
 
-## Resources
+  name     = var.name
+  location = var.location
 
-(Any additional resources or related projects)
+  should_create_virtual_machine = var.should_create_virtual_machine
+  is_linux_server               = var.is_linux_server
+}
+```
 
-- Link to supporting information
-- Link to similar sample
-- ...
+If you would like to lock the module on a particular tag that's possible by adding a `?ref=<tag>` version to the end of the `source` field.
+
+```hcl
+module "aio_full_with_tag" {
+  source = "github.com/azure-samples/azure-edge-extensions-aio-iac-terraform//deploy/modules/infra?ref=0.1.4"
+
+  name     = var.name
+  location = var.location
+
+  should_create_virtual_machine = var.should_create_virtual_machine
+  is_linux_server               = var.is_linux_server
+}
+```
